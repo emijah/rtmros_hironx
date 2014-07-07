@@ -516,6 +516,26 @@ class HIRONX(HrpsysConfigurator):
             print self.configurator_name, 'servo off: communication error'
             return -1
 
+    def isServoStop(self):
+        status = self.getActualState()
+        if len(status.servoState) > 1:
+            return status.servoState[0][1] & 1
+
+        return False
+
+    def prepareDisengageServoStop(self):
+        if self.isServoStop():
+            for g in self.Groups:
+                self.waitInterpolationOfGroup(g)
+            jangles = self.flat2Groups(self.getActualState().angle)
+            index = 0
+            for i,g in enumerate(self.Groups):
+                joint_num = len(g[1])
+                self.setJointAnglesOfGroup(g[0], jangles[i],2)
+            for g in self.Groups:
+                self.waitInterpolationOfGroup(g)
+
+
     def checkEncoders(self, jname='all', option=''):
         '''
         Run the encoder checking sequence for specified joints,
